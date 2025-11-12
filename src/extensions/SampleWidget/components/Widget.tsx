@@ -148,6 +148,7 @@ export const Widget = (): ReactNode => {
                   padding: '1rem',
                   border: '1px solid #ddd',
                   borderRadius: '4px',
+                  color: '#fff',
                   backgroundColor: '#000',
                 }}
               >
