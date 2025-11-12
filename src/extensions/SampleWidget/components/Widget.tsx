@@ -159,10 +159,10 @@ export const Widget = (): ReactNode => {
                     rel="noopener noreferrer"
                     style={{ color: '#0366d6', textDecoration: 'none', fontWeight: 'bold' }}
                   >
-                    {truncateSha(commit.sha)}
+                    Commit: {truncateSha(commit.sha)}
                   </a>
                   <span style={{ marginLeft: '0.5rem', fontSize: '0.9em', color: '#666' }}>
-                    ({commit.branch})
+                    Branche: {commit.branch}
                   </span>
                 </div>
                 <div style={{ marginBottom: '0.5rem', fontWeight: '500' }}>
