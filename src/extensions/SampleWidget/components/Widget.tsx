@@ -60,7 +60,7 @@ async function getCommitsForBranch(branchName: string): Promise<Commit[]> {
   }
 }
 
-async function getAllCommitsFromAllBranches(): Promise<{ commits: Commit[]; totalBranches: number }> {
+async function getAllCommitsFromAllBranches(): Promise<{ commits: Commit[]; branches: string[] }> {
   const branches = await getAllBranches();
   const allCommits: Commit[] = [];
 
@@ -75,15 +75,16 @@ async function getAllCommitsFromAllBranches(): Promise<{ commits: Commit[]; tota
 
   return {
     commits: uniqueCommits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
-    totalBranches: branches.length,
+    branches,
   };
 }
 
 export const Widget = (): ReactNode => {
   const [commits, setCommits] = useState<Commit[]>([]);
+  const [branches, setBranches] = useState<string[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState<string>('all');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [totalBranches, setTotalBranches] = useState<number>(0);
 
   const fetchData = async () => {
     setLoading(true);
@@ -91,7 +92,7 @@ export const Widget = (): ReactNode => {
     try {
       const result = await getAllCommitsFromAllBranches();
       setCommits(result.commits);
-      setTotalBranches(result.totalBranches);
+      setBranches(result.branches);
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la récupération des commits');
     } finally {
@@ -116,29 +117,50 @@ export const Widget = (): ReactNode => {
 
   const truncateSha = (sha: string): string => sha.substring(0, 7);
 
+  const filteredCommits =
+    selectedBranch === 'all'
+      ? commits
+      : commits.filter(commit => commit.branch === selectedBranch);
+
   return (
     <>
-    <div style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', gap: '1rem' }}>
       <h1>Liste des commits du repo</h1>
 
-      <button
-        onClick={fetchData}
-        disabled={loading}
-        style={{
-          marginBottom: '1rem',
-          padding: '0.6rem 1rem',
-          border: 'none',
-          borderRadius: '4px',
-          backgroundColor: '#0366d6',
-          color: '#fff',
-          cursor: loading ? 'not-allowed' : 'pointer',
-          fontWeight: 'bold',
-          width: 'fit-content'
-        }}
-      >
-        {loading ? 'Chargement...' : '🔄 Rafraîchir les données'}
-      </button>
-    </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', gap: '1rem' }}>
+        <button
+          onClick={fetchData}
+          disabled={loading}
+          style={{
+            padding: '0.6rem 1rem',
+            border: 'none',
+            borderRadius: '4px',
+            backgroundColor: '#0366d6',
+            color: '#fff',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            fontWeight: 'bold',
+          }}
+        >
+          {loading ? 'Chargement...' : '🔄 Rafraîchir les données'}
+        </button>
+
+        <select
+          value={selectedBranch}
+          onChange={e => setSelectedBranch(e.target.value)}
+          style={{
+            padding: '0.5rem',
+            borderRadius: '4px',
+            border: '1px solid #ccc',
+            cursor: 'pointer',
+          }}
+        >
+          <option value="all">Toutes les branches</option>
+          {branches.map(branch => (
+            <option key={branch} value={branch}>
+              {branch}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {error && (
         <div
@@ -164,15 +186,12 @@ export const Widget = (): ReactNode => {
             }}
           >
             <p>
-              <strong>Total de branches :</strong> {totalBranches}
-            </p>
-            <p>
-              <strong>Total de commits uniques :</strong> {commits.length}
+              <strong>Total de commits :</strong> {filteredCommits.length}
             </p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {commits.map((commit) => (
+            {filteredCommits.map(commit => (
               <div
                 key={commit.sha}
                 style={{
