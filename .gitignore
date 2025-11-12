@@ -85,3 +85,5 @@ v8-compile-cache-0
 .DS_Store
 
 eslint_report.json
+
+envs.tsx
